@@ -1,0 +1,85 @@
+---
+# Home Lab Monitor Services
+# These define the available services for the home_lab_monitor integration
+
+add_host:
+  name: Add Host
+  description: "Add a new host to the home lab monitor"
+  fields:
+    name:
+      name: Name
+      description: "Friendly name for the host (e.g., Synology, TrueNAS)"
+      required: true
+      selector:
+        text:
+    ip:
+      name: IP Address
+      description: "IP address of the host to monitor"
+      required: true
+      selector:
+        text:
+    ports:
+      name: Ports
+      description: "Comma-separated list of ports to monitor (e.g., 22,80,443)"
+      required: true
+      default: "22,443"
+      selector:
+        text:
+    labels:
+      name: Port Labels
+      description: "Comma-separated port:label pairs (e.g., 22:SSH,80:HTTP). If empty, uses port numbers."
+      required: false
+      default: ""
+      selector:
+        text:
+    http_ports:
+      name: HTTP Ports
+      description: "Comma-separated list of ports to check for HTTP responses"
+      required: false
+      default: ""
+      selector:
+        text:
+    description:
+      name: Description
+      description: "Optional description of the host"
+      required: false
+      default: ""
+      selector:
+        text:
+    group:
+      name: Group
+      description: "Group category for the host"
+      required: false
+      default: "default"
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - value: "default"
+              label: "Default"
+            - value: "nas"
+              label: "NAS"
+            - value: "servers"
+              label: "Servers"
+            - value: "workstations"
+              label: "Workstations"
+            - value: "edge"
+              label: "Edge Devices"
+            - value: "other"
+              label: "Other"
+
+remove_host:
+  name: Remove Host
+  description: "Remove a host from the home lab monitor"
+  fields:
+    ip:
+      name: IP Address
+      description: "IP address of the host to remove"
+      required: true
+      selector:
+        text:
+
+scan_now:
+  name: Scan Now
+  description: "Trigger an immediate scan of all monitored hosts"
+  fields: {}
