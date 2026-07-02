@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Lab Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-healthy { background-color: #4caf50; }
+        .status-degraded { background-color: #ff9800; }
+        .status-down { background-color: #f44336; }
+        .status-unknown { background-color: #9e9e9e; }
+
+        .host-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .host-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .host-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .host-ip {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .host-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-healthy { background-color: #e8f5e8; color: #2e7d32; }
+        .status-degraded { background-color: #fff3e0; color: #ef6c00; }
+        .status-down { background-color: #ffebee; color: #c62828; }
+        .status-unknown { background-color: #f5f5f5; color: #757575; }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Home Lab Monitor</h1>
+            <p>Real-time status monitoring for your home lab infrastructure</p>
+        </header>
+
+        <div class="summary-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-hosts">0</div>
+                <div class="stat-label">Total Hosts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #4caf50;" id="healthy-count">0</div>
+                <div class="stat-label">Healthy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #ff9800;" id="degraded-count">0</div>
+                <div class="stat-label">Degraded</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #f44336;" id="down-count">0</div>
+                <div class="stat-label">Down</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Now</button>
+            <button class="btn btn-secondary" onclick="addHost()">➕ Add Host</button>
+            <button class="btn btn-secondary" onclick="removeHost()">🗑️ Remove Host</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>🌐 Network Status</h2>
+                <div id="network-status">
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">Router (192.168.12.1)</div>
+                            <div class="host-ip">ASUS RT-AC88U</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">Synology NAS</div>
+                            <div class="host-ip">192.168.12.35</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">TrueNAS</div>
+                            <div class="host-ip">192.168.12.187</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">AMD AI Workstation</div>
+                            <div class="host-ip">192.168.12.213</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🖥️ Workstations</h2>
+                <div id="workstation-status">
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">GolfSim PC</div>
+                            <div class="host-ip">192.168.12.190</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">HP G3</div>
+                            <div class="host-ip">192.168.12.195</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🤖 Edge Devices</h2>
+                <div id="edge-status">
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">DigiEdge Pi</div>
+                            <div class="host-ip">192.168.12.229</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                    <div class="host-item">
+                        <div>
+                            <div class="host-name">Home Assistant</div>
+                            <div class="host-ip">192.168.12.227</div>
+                        </div>
+                        <span class="host-status status-healthy">HEALTHY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="last-update">
+            <p>Last updated: <span id="last-update-time">--</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Mock data - in production, this would fetch from Home Assistant API
+        let mockData = {
+            total_hosts: 8,
+            healthy: 6,
+            degraded: 1,
+            down: 1,
+            last_update: new Date().toISOString(),
+            hosts: [
+                { name: "Router", ip: "192.168.12.1", status: "healthy" },
+                { name: "Synology", ip: "192.168.12.35", status: "healthy" },
+                { name: "TrueNAS", ip: "192.168.12.187", status: "healthy" },
+                { name: "AMD AI", ip: "192.168.12.213", status: "healthy" },
+                { name: "GolfSim PC", ip: "192.168.12.190", status: "healthy" },
+                { name: "HP G3", ip: "192.168.12.195", status: "degraded" },
+                { name: "DigiEdge Pi", ip: "192.168.12.229", status: "healthy" },
+                { name: "DigiNode", ip: "192.168.12.204", status: "down" }
+            ]
+        };
+
+        function updateDashboard(data) {
+            document.getElementById('total-hosts').textContent = data.total_hosts;
+            document.getElementById('healthy-count').textContent = data.healthy;
+            document.getElementById('degraded-count').textContent = data.degraded;
+            document.getElementById('down-count').textContent = data.down;
+            document.getElementById('last-update-time').textContent = new Date(data.last_update).toLocaleString();
+
+            // Update host status cards
+            updateHostStatus('network-status', data.hosts.filter(h => ['Router', 'Synology', 'TrueNAS', 'AMD AI'].includes(h.name)));
+            updateHostStatus('workstation-status', data.hosts.filter(h => ['GolfSim PC', 'HP G3'].includes(h.name)));
+            updateHostStatus('edge-status', data.hosts.filter(h => ['DigiEdge Pi', 'Home Assistant', 'DigiNode'].includes(h.name)));
+        }
+
+        function updateHostStatus(elementId, hosts) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            hosts.forEach(host => {
+                const statusClass = `status-${host.status}`;
+                const statusText = host.status.toUpperCase();
+
+                const hostItem = document.createElement('div');
+                hostItem.className = 'host-item';
+                hostItem.innerHTML = `
+                    <div>
+                        <div class="host-name">${host.name}</div>
+                        <div class="host-ip">${host.ip}</div>
+                    </div>
+                    <span class="host-status ${statusClass}">${statusText}</span>
+                `;
+                container.appendChild(hostItem);
+            });
+        }
+
+        function refreshData() {
+            // Simulate API call
+            mockData.last_update = new Date().toISOString();
+            updateDashboard(mockData);
+        }
+
+        function addHost() {
+            const name = prompt('Enter host name:');
+            if (name) {
+                const ip = prompt('Enter IP address:');
+                if (ip) {
+                    mockData.hosts.push({ name, ip, status: 'healthy' });
+                    mockData.total_hosts++;
+                    mockData.healthy++;
+                    updateDashboard(mockData);
+                }
+            }
+        }
+
+        function removeHost() {
+            const ip = prompt('Enter IP address to remove:');
+            if (ip) {
+                const index = mockData.hosts.findIndex(h => h.ip === ip);
+                if (index !== -1) {
+                    mockData.hosts.splice(index, 1);
+                    mockData.total_hosts--;
+                    mockData.healthy--;
+                    updateDashboard(mockData);
+                }
+            }
+        }
+
+        // Initialize dashboard
+        updateDashboard(mockData);
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>

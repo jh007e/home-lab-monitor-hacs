@@ -1,0 +1,213 @@
+# Home Lab Monitor - Lovelace Dashboard
+# Add this to your Home Assistant configuration.yaml under lovelace:
+#   dashboards:
+#     home_lab_monitor:
+#       mode: yaml
+#       title: Home Lab Monitor
+#       filename: lovelace/home_lab_monitor.yaml
+#       icon: mdi:server
+#       require_admin: false
+#       show_in_sidebar: true
+#       url: /lovelace-home-lab-monitor
+
+# Or import via UI: Settings > Dashboards > + Import Dashboard > paste this
+
+title: Home Lab Monitor
+icon: mdi:server
+views:
+  - title: Overview
+    icons:
+      - entity: sensor.home_lab_overall
+        icon: mdi:server
+    cards:
+      # Overall status summary
+      - type: entities
+        title: Lab Health Summary
+        show_header_toggle: false
+        entities:
+          - entity: sensor.home_lab_overall
+            name: Overall Status
+            icon: mdi:network-outline
+          - entity: sensor.home_lab_overall
+            attribute: total_hosts
+            name: Total Hosts
+            icon: mdi:server
+          - entity: sensor.home_lab_overall
+            attribute: healthy
+            name: Healthy
+            icon: mdi:check-circle
+            tap_action: none
+          - entity: sensor.home_lab_overall
+            attribute: degraded
+            name: Degraded
+            icon: mdi:alert
+            tap_action: none
+          - entity: sensor.home_lab_overall
+            attribute: down
+            name: Down
+            icon: mdi:alert-circle
+            tap_action: none
+          - entity: sensor.home_lab_overall
+            attribute: last_scan
+            name: Last Scan
+            icon: mdi:clock-outline
+            tap_action: none
+
+      # Controls
+      - type: button
+        title: Scan Now
+        icon: mdi:refresh
+        tap_action:
+          action: call-service
+          service: home_lab_monitor.scan_now
+        show_state: false
+        secondary_info: last-updated
+
+      # Host status cards
+      - type: vertical-stack
+        title: Host Status
+        cards:
+          # Synology NAS
+          - type: entity
+            entity: binary_sensor.synology_status
+            name: Synology
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.synology_status'].state == 'on' else 'red' }};
+                }
+
+          # TrueNAS
+          - type: entity
+            entity: binary_sensor.truenas_status
+            name: TrueNAS
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.truenas_status'].state == 'on' else 'red' }};
+                }
+
+          # AMD-AI Workstation
+          - type: entity
+            entity: binary_sensor.ampd_ai_status
+            name: AMD-AI Workstation
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.ampd_ai_status'].state == 'on' else 'red' }};
+                }
+
+          # Home Assistant
+          - type: entity
+            entity: binary_sensor.homeassistant_status
+            name: Home Assistant
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.homeassistant_status'].state == 'on' else 'red' }};
+                }
+
+          # DigiEdge Pi
+          - type: entity
+            entity: binary_sensor.digiedge_pi_status
+            name: DigiEdge Pi
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.digiedge_pi_status'].state == 'on' else 'red' }};
+                }
+
+          # HP-G3
+          - type: entity
+            entity: binary_sensor.hp_g3_status
+            name: HP-G3
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.hp_g3_status'].state == 'on' else 'red' }};
+                }
+
+          # DESKTOP-GolfSim
+          - type: entity
+            entity: binary_sensor.desktop_golfsim_status
+            name: DESKTOP-GolfSim
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.desktop_golfsim_status'].state == 'on' else 'red' }};
+                }
+
+          # DigiNode
+          - type: entity
+            entity: binary_sensor.diginode_status
+            name: DigiNode
+            show_state: true
+            state_content:
+              - last-changed
+              - state
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid {{ 'green' if states['binary_sensor.diginode_status'].state == 'on' else 'red' }};
+                }
+
+  - title: Details
+    icons:
+      - entity: sensor.home_lab_overall
+        icon: mdi:chart-line
+    cards:
+      # Port status details
+      - type: entities
+        title: Port Status Details
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.synology_status
+            name: Synology Ports
+            secondary_info: last-changed
+          - entity: binary_sensor.truenas_status
+            name: TrueNAS Ports
+            secondary_info: last-changed
+          - entity: binary_sensor.ampd_ai_status
+            name: AMD-AI Ports
+            secondary_info: last-changed
+          - entity: binary_sensor.homeassistant_status
+            name: Home Assistant Ports
+            secondary_info: last-changed
+
+      # Recent alerts
+      - type: logbook
+        title: Recent Activity
+        entities:
+          - sensor.home_lab_overall
+          - binary_sensor.synology_status
+          - binary_sensor.truenas_status
+          - binary_sensor.ampd_ai_status
+          - binary_sensor.homeassistant_status
