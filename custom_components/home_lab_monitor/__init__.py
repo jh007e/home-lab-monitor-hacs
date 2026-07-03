@@ -23,7 +23,6 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -48,9 +47,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up config entry."""
+    from . import sensor as sensor_platform
+    from . import binary_sensor as binary_sensor_platform
+    
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
@@ -94,25 +95,15 @@ async def async_setup_entry(
     hass.data[DOMAIN]["coordinator"] = coordinator
     hass.data[DOMAIN]["config_entry_id"] = config_entry.entry_id
 
-    # Create initial entities
-    entities = []
-    for host in hosts:
-        entities.append(HomeLabHostSensor(coordinator, host))
-        for port in host.get("ports", []):
-            port_key = str(port)
-            label = host.get("labels", {}).get(port_key, f"Port {port}")
-            entities.append(HomeLabPortSensor(coordinator, host, port, label))
-
-    entities.append(HomeLabGroupSensor(coordinator))
-
-    async_add_entities(entities, update_before_add=True)
-
     # Register services
     hass.data[DOMAIN]["services"] = _async_register_services(hass)
 
     # Initial scan
     await coordinator.async_refresh()
 
+    # Set up platforms
+    await hass.config_entries.async_forward_entry_setups(config_entry, ["sensor", "binary_sensor"])
+    
     return True
 
 

@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
 
 from . import HomeLabMonitorCoordinator
 from .const import DOMAIN, STATUS_HEALTHY, STATUS_DEGRADED, STATUS_DOWN, STATUS_UNKNOWN
@@ -22,6 +23,26 @@ def _slugify(text: str) -> str:
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[\s_-]+', '_', text)
     return text
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up binary sensor entities."""
+    coordinator: HomeLabMonitorCoordinator = hass.data[DOMAIN]["coordinator"]
+    hosts = coordinator.hosts
+
+    entities = []
+    for host in hosts:
+        entities.append(HomeLabHostSensor(coordinator, host))
+        for port in host.get("ports", []):
+            port_key = str(port)
+            label = host.get("labels", {}).get(port_key, f"Port {port}")
+            entities.append(HomeLabPortSensor(coordinator, host, port, label))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
@@ -98,7 +119,7 @@ class HomeLabPortSensor(CoordinatorEntity, BinarySensorEntity):
         self._port = port
         self._label = label
 
-        self._attr_name = f"{label} Port"
+        self._attr_name = f"{self._label} Port"
         self._attr_unique_id = f"{_slugify(self._name)}_port_{port}"
 
     @property

@@ -8,14 +8,10 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
 
 from . import HomeLabMonitorCoordinator
-from .const import (
-    STATUS_HEALTHY,
-    STATUS_DEGRADED,
-    STATUS_DOWN,
-    STATUS_UNKNOWN,
-)
+from .const import DOMAIN, STATUS_HEALTHY, STATUS_DEGRADED, STATUS_DOWN, STATUS_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +23,16 @@ def _slugify(text: str) -> str:
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[\s_-]+', '_', text)
     return text
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up sensor entities."""
+    coordinator: HomeLabMonitorCoordinator = hass.data[DOMAIN]["coordinator"]
+    async_add_entities([HomeLabGroupSensor(coordinator)])
 
 
 class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
