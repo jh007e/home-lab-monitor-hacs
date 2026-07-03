@@ -64,7 +64,7 @@ async def async_setup_entry(
     hosts = config_entry.options.get(CONF_HOSTS, config_entry.data.get(CONF_HOSTS, []))
 
     # Load saved hosts from persistent file
-    hosts_file = Path(hass.config.dir) / STATE_FILE
+    hosts_file = Path(hass.config.config_dir) / STATE_FILE
     if hosts_file.exists() and not hosts:
         try:
             with open(hosts_file, "r") as f:
@@ -281,7 +281,7 @@ class HomeLabMonitorCoordinator(DataUpdateCoordinator):
 
     def _save_hosts(self):
         """Persist hosts to disk."""
-        hosts_file = Path(self.hass.config.dir) / STATE_FILE
+        hosts_file = Path(self.hass.config.config_dir) / STATE_FILE
         try:
             state = {
                 "hosts": self.hosts,
