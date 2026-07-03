@@ -1,22 +1,20 @@
-/* Home Lab Monitor Custom Lovelace Card - v1.0.2 */
+/* Home Lab Monitor Custom Lovelace Card - v1.0.3 */
 (() => {
   "use strict";
+
+  console.log("Home Lab Monitor: Loading card.js...");
 
   class HomeLabMonitorCard extends HTMLElement {
     constructor() {
       super();
       this._config = {};
       this._hosts = {};
-      this._overallStatus = "unknown";
-      this._totalHosts = 0;
-      this._healthy = 0;
-      this._degraded = 0;
-      this._down = 0;
-      this._refreshTimer = null;
       this._hass = null;
+      console.log("Home Lab Monitor: Card constructor called");
     }
 
     setConfig(config) {
+      console.log("Home Lab Monitor: setConfig called with:", config);
       if (!config) {
         throw new Error("Home Lab Monitor: Configuration is required");
       }
@@ -39,9 +37,11 @@
         refresh_interval: 60000,
         ...config
       };
+      console.log("Home Lab Monitor: Config set:", this._config);
     }
 
     connectedCallback() {
+      console.log("Home Lab Monitor: connectedCallback");
       this._updateCard();
       if (this._config.refresh_interval > 0) {
         this._refreshTimer = setInterval(() => this._updateCard(), this._config.refresh_interval);
@@ -49,6 +49,7 @@
     }
 
     disconnectedCallback() {
+      console.log("Home Lab Monitor: disconnectedCallback");
       if (this._refreshTimer) {
         clearInterval(this._refreshTimer);
       }
@@ -56,6 +57,7 @@
 
     set hass(hass) {
       this._hass = hass;
+      console.log("Home Lab Monitor: hass set");
       this._updateCard();
     }
 
@@ -63,37 +65,25 @@
       return 2;
     }
 
-    static getStubConfig() {
-      return {
-        title: "Home Lab Monitor",
-        entity_id: "sensor.home_lab_monitor_overall",
-        show_status: true,
-        show_last_update: true,
-        show_scan_time: false,
-        show_group: true,
-        show_ip: false,
-        show_ports: true,
-        show_http: true,
-        show_latency: true,
-        group_by: "name",
-        max_groups: 0,
-        collapsed: false,
-        theme_mode: "auto",
-        card_type: "cards",
-        refresh_interval: 60000,
-      };
-    }
-
     _updateCard() {
       const hass = this._hass;
-      if (!hass || !hass.states) return;
+      if (!hass || !hass.states) {
+        console.log("Home Lab Monitor: No hass or states available");
+        return;
+      }
 
-      const entity = hass.states[this._config.entity_id];
-      if (!entity) return;
+      const entityId = this._config.entity_id || "sensor.home_lab_monitor_overall";
+      const entity = hass.states[entityId];
+      if (!entity) {
+        console.log("Home Lab Monitor: Entity not found:", entityId);
+        return;
+      }
+
+      console.log("Home Lab Monitor: Entity state:", entity.state);
+      console.log("Home Lab Monitor: Entity attributes:", entity.attributes);
 
       const attrs = entity.attributes || {};
       this._hosts = attrs.hosts || {};
-      this._overallStatus = entity.state || "unknown";
       this._totalHosts = attrs.total_hosts || 0;
       this._healthy = attrs.healthy || 0;
       this._degraded = attrs.degraded || 0;
@@ -149,6 +139,8 @@
         this.removeChild(this.firstChild);
       }
       this.appendChild(card);
+      
+      console.log("Home Lab Monitor: Card rendered successfully");
     }
 
     _renderStatusSummary() {
@@ -335,7 +327,13 @@
   }
 
   // Define the custom element
-  customElements.define("home-lab-monitor-card", HomeLabMonitorCard);
+  console.log("Home Lab Monitor: Registering custom element...");
+  try {
+    customElements.define("home-lab-monitor-card", HomeLabMonitorCard);
+    console.log("Home Lab Monitor: Custom element registered successfully");
+  } catch (e) {
+    console.error("Home Lab Monitor: Failed to register custom element:", e);
+  }
 
   // Register with Home Assistant Lovelace
   window.customCards = window.customCards || [];
@@ -346,4 +344,5 @@
     preview: false,
     documentationURL: "https://github.com/jh007e/home-lab-monitor-hacs",
   });
+  console.log("Home Lab Monitor: Card registered with HA Lovelace");
 })();
