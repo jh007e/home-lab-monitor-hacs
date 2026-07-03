@@ -2,13 +2,11 @@
   "domain": "home_lab_monitor",
   "name": "Home Lab Monitor",
   "version": "1.0.0",
-  "documentation": "https://github.com/jh007e/home-lab-monitor-hacs",
-  "issue_tracker": "https://github.com/jh007e/home-lab-monitor-hacs/issues",
+  "documentation": "https://github.com/jh007e/home-lab-monitor",
+  "issue_tracker": "https://github.com/jh007e/home-lab-monitor/issues",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@jh007e"
-  ],
+  "codeowners": ["@jh007e"],
   "iot_class": "local_polling",
   "config_flow": true,
   "zeroconf": [],
