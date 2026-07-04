@@ -17,13 +17,36 @@ from .const import DOMAIN, STATUS_HEALTHY, STATUS_DEGRADED, STATUS_DOWN, STATUS_
 _LOGGER = logging.getLogger(__name__)
 
 
-def _slugify(text: str) -> str:
-    """Simple slugify."""
-    import re
-    text = text.lower().strip()
-    text = re.sub(r'[^\w\s-]', '', text)
-    text = re.sub(r'[\s_-]+', '_', text)
-    return text
+def _get_status_dict(coordinator: HomeLabMonitorCoordinator, ip: str) -> Dict[str, Any]:
+    """Convert HostStatus dataclass to dict for consistent access."""
+    status = coordinator.data.get(ip) if coordinator.data else None
+    if status is None:
+        return {}
+    # HostStatus dataclass -> dict
+    if hasattr(status, '__dict__'):
+        return status.__dict__
+    # Already a dict
+    if isinstance(status, dict):
+        return status
+    return {}
+
+
+def _get_overall_status(status) -> str:
+    """Extract overall_status from HostStatus dataclass or dict."""
+    if hasattr(status, 'overall_status'):
+        return status.overall_status
+    if isinstance(status, dict):
+        return status.get("overall_status", STATUS_UNKNOWN)
+    return STATUS_UNKNOWN
+
+
+def _get_name(status) -> str:
+    """Extract name from HostStatus dataclass or dict."""
+    if hasattr(status, 'name'):
+        return status.name
+    if isinstance(status, dict):
+        return status.get("name", "")
+    return ""
 
 
 async def async_setup_entry(
@@ -56,7 +79,7 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
 
         statuses = set()
         for ip, status in self.coordinator.data.items():
-            statuses.add(status.get("overall_status", STATUS_UNKNOWN))
+            statuses.add(_get_overall_status(status))
 
         # If any host is down, overall is down
         if STATUS_DOWN in statuses:
@@ -88,19 +111,22 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
         down_count = 0
 
         for ip, status in self.coordinator.data.items():
-            host_summary[status.get("name", ip)] = {
+            name = _get_name(status)
+            overall_status = _get_overall_status(status)
+            
+            host_summary[name if name else ip] = {
                 "ip": ip,
-                "status": status.get("overall_status", STATUS_UNKNOWN),
-                "last_updated": status.get("last_update", ""),
-                "scan_time": status.get("scan_time", 0),
-                "group": status.get("group", "default"),
+                "status": overall_status,
+                "last_updated": status.last_update if hasattr(status, 'last_update') else status.get("last_update", ""),
+                "scan_time": status.scan_time if hasattr(status, 'scan_time') else status.get("scan_time", 0),
+                "group": status.group if hasattr(status, 'group') else status.get("group", "default"),
             }
 
-            if status.get("overall_status") == STATUS_HEALTHY:
+            if overall_status == STATUS_HEALTHY:
                 healthy_count += 1
-            elif status.get("overall_status") == STATUS_DEGRADED:
+            elif overall_status == STATUS_DEGRADED:
                 degraded_count += 1
-            elif status.get("overall_status") == STATUS_DOWN:
+            elif overall_status == STATUS_DOWN:
                 down_count += 1
 
         return {

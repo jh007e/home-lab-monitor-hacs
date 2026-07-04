@@ -46,6 +46,20 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
+def _get_status_dict(coordinator: HomeLabMonitorCoordinator, ip: str) -> Dict[str, Any]:
+    """Convert HostStatus dataclass to dict for consistent access."""
+    status = coordinator.data.get(ip) if coordinator.data else None
+    if status is None:
+        return {}
+    # HostStatus dataclass -> dict
+    if hasattr(status, '__dict__'):
+        return status.__dict__
+    # Already a dict
+    if isinstance(status, dict):
+        return status
+    return {}
+
+
 class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
     """Binary sensor for overall host health."""
 
@@ -68,15 +82,18 @@ class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
         """Return True if host is healthy (not down)."""
         if not self.coordinator.data:
             return False
-        status_data = self.coordinator.data.get(self._ip, {})
-        return status_data.get("overall_status") == STATUS_HEALTHY
+        status = self.coordinator.data.get(self._ip)
+        if status is None:
+            return False
+        # Handle HostStatus dataclass (attribute access) vs dict (key access)
+        if hasattr(status, 'overall_status'):
+            return status.overall_status == STATUS_HEALTHY
+        return status.get("overall_status") == STATUS_HEALTHY
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return extra state attributes."""
-        if not self.coordinator.data:
-            return {}
-        status_data = self.coordinator.data.get(self._ip, {})
+        status_data = _get_status_dict(self.coordinator, self._ip)
         return {
             "ip": self._ip,
             "group": self._group,
@@ -125,19 +142,17 @@ class HomeLabPortSensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if port is open."""
-        if not self.coordinator.data:
-            return False
-        status_data = self.coordinator.data.get(self._ip, {})
+        status_data = _get_status_dict(self.coordinator, self._ip)
         ports = status_data.get("ports", {})
         port_data = ports.get(str(self._port), {})
-        return port_data.get("open", False)
+        if isinstance(port_data, dict):
+            return port_data.get("open", False)
+        return False
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return extra state attributes."""
-        if not self.coordinator.data:
-            return {}
-        status_data = self.coordinator.data.get(self._ip, {})
+        status_data = _get_status_dict(self.coordinator, self._ip)
         ports = status_data.get("ports", {})
         port_data = ports.get(str(self._port), {})
         return {
