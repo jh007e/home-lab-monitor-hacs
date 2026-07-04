@@ -95,7 +95,6 @@ class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {(DOMAIN, self._attr_unique_id)},
             "name": self._name,
             "model": f"Host ({self._ip})",
-            "config_entry_id": self.coordinator.hass.data[DOMAIN].get("config_entry_id"),
         }
 
     @callback
@@ -154,7 +153,6 @@ class HomeLabPortSensor(CoordinatorEntity, BinarySensorEntity):
         return {
             "identifiers": {(DOMAIN, self._attr_unique_id)},
             "name": f"{self._name} - {self._label}",
-            "config_entry_id": self.coordinator.hass.data[DOMAIN].get("config_entry_id"),
         }
 
     @callback

@@ -118,7 +118,6 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self._attr_unique_id)},
             "name": "Home Lab Monitor Hub",
             "model": "Home Lab Monitor",
-            "config_entry_id": self.hass.data[DOMAIN].get("config_entry_id"),
         }
 
     @callback
