@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from homeassistant.const import EntityCategory
 from homeassistant.components.sensor import SensorEntity
@@ -11,42 +11,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.config_entries import ConfigEntry
 
-from . import HomeLabMonitorCoordinator
+from . import HomeLabMonitorCoordinator, HostStatus
 from .const import DOMAIN, STATUS_HEALTHY, STATUS_DEGRADED, STATUS_DOWN, STATUS_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _get_status_dict(coordinator: HomeLabMonitorCoordinator, ip: str) -> Dict[str, Any]:
-    """Convert HostStatus dataclass to dict for consistent access."""
-    status = coordinator.data.get(ip) if coordinator.data else None
-    if status is None:
-        return {}
-    # HostStatus dataclass -> dict
-    if hasattr(status, '__dict__'):
-        return status.__dict__
-    # Already a dict
-    if isinstance(status, dict):
-        return status
-    return {}
-
-
-def _get_overall_status(status) -> str:
-    """Extract overall_status from HostStatus dataclass or dict."""
-    if hasattr(status, 'overall_status'):
-        return status.overall_status
-    if isinstance(status, dict):
-        return status.get("overall_status", STATUS_UNKNOWN)
-    return STATUS_UNKNOWN
-
-
-def _get_name(status) -> str:
-    """Extract name from HostStatus dataclass or dict."""
-    if hasattr(status, 'name'):
-        return status.name
-    if isinstance(status, dict):
-        return status.get("name", "")
-    return ""
 
 
 async def async_setup_entry(
@@ -79,7 +47,8 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
 
         statuses = set()
         for ip, status in self.coordinator.data.items():
-            statuses.add(_get_overall_status(status))
+            # status is a HostStatus dataclass
+            statuses.add(status.overall_status if hasattr(status, 'overall_status') else STATUS_UNKNOWN)
 
         # If any host is down, overall is down
         if STATUS_DOWN in statuses:
@@ -111,15 +80,16 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
         down_count = 0
 
         for ip, status in self.coordinator.data.items():
-            name = _get_name(status)
-            overall_status = _get_overall_status(status)
+            # status is a HostStatus dataclass
+            name = status.name if hasattr(status, 'name') else ip
+            overall_status = status.overall_status if hasattr(status, 'overall_status') else STATUS_UNKNOWN
             
-            host_summary[name if name else ip] = {
+            host_summary[name] = {
                 "ip": ip,
                 "status": overall_status,
-                "last_updated": status.last_update if hasattr(status, 'last_update') else status.get("last_update", ""),
-                "scan_time": status.scan_time if hasattr(status, 'scan_time') else status.get("scan_time", 0),
-                "group": status.group if hasattr(status, 'group') else status.get("group", "default"),
+                "last_updated": status.last_update if hasattr(status, 'last_update') else "",
+                "scan_time": status.scan_time if hasattr(status, 'scan_time') else 0,
+                "group": status.group if hasattr(status, 'group') else "default",
             }
 
             if overall_status == STATUS_HEALTHY:
