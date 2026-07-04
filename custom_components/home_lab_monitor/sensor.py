@@ -4,6 +4,7 @@ import datetime
 import logging
 from typing import Any, Dict
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +40,7 @@ class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
     """Sensor showing overall lab health."""
 
     _attr_has_entity_name = True
-    _attr_entity_category = "diagnostic"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: HomeLabMonitorCoordinator):
         """Initialize group sensor."""

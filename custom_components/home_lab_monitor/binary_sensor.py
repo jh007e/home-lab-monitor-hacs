@@ -4,6 +4,7 @@ import logging
 import datetime
 from typing import Any, Dict
 
+from homeassistant.const import EntityCategory
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,7 +49,7 @@ async def async_setup_entry(
 class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
     """Binary sensor for overall host health."""
 
-    _attr_entity_category = "diagnostic"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: HomeLabMonitorCoordinator, host_config: dict):
@@ -106,7 +107,7 @@ class HomeLabHostSensor(CoordinatorEntity, BinarySensorEntity):
 class HomeLabPortSensor(CoordinatorEntity, BinarySensorEntity):
     """Binary sensor for individual port status."""
 
-    _attr_entity_category = "diagnostic"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: HomeLabMonitorCoordinator, host_config: dict, port: int, label: str):
