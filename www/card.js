@@ -338,7 +338,7 @@
   // Register with Home Assistant Lovelace
   window.customCards = window.customCards || [];
   window.customCards.push({
-    type: "home-lab-monitor-card",
+    type: "custom:home-lab-monitor-card",
     name: "Home Lab Monitor",
     description: "A custom card for Home Lab Monitor integration",
     preview: false,

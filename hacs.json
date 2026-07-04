@@ -1,0 +1,6 @@
+{
+  "name": "Home Lab Monitor",
+  "render_readme": true,
+  "homeassistant": "2023.1.0",
+  "filename": "hacs.json"
+}

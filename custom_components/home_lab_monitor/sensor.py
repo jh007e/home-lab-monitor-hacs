@@ -30,13 +30,13 @@ async def async_setup_entry(
 class HomeLabGroupSensor(CoordinatorEntity, SensorEntity):
     """Sensor showing overall lab health."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: HomeLabMonitorCoordinator):
         """Initialize group sensor."""
         super().__init__(coordinator)
-        self._attr_name = "Home Lab Overall"
+        self._attr_name = "home_lab_monitor_overall"
         self._attr_unique_id = "home_lab_monitor_overall"
 
     @property
