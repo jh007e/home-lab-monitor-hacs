@@ -10,10 +10,21 @@
 #       show_in_sidebar: true
 #       url: /lovelace-home-lab-monitor
 
-# Or import via UI: Settings > Dashboards > + Import Dashboard > paste this
+# ── IMPORTANT ────────────────────────────────────────────────────────────────
+# This dashboard YAML includes the card.js resource automatically.
+# If you imported this dashboard via the UI, make sure the resource is added:
+#   Settings → Dashboards → Scroll to bottom → "Lovelace Resources" → + Add Resource
+#   URL: /hacsfiles/home-lab-monitor-hacs/www/card.js
+#   Type: JavaScript Module
+#
+# Alternatively, copy card.js into your Home Assistant /config/www/ directory
+# and use URL: /local/card.js instead.
 
 title: Home Lab Monitor
 icon: mdi:server
+resources:
+  - url: /hacsfiles/home-lab-monitor-hacs/www/card.js
+    type: module
 views:
   - title: Overview
     icons:
