@@ -1,5 +1,5 @@
-/* Home Lab Monitor Custom Lovelace Card - v1.0.4 */
-// Register custom element
+/* Home Lab Monitor Custom Lovelace Card - v1.0.6 */
+
 class HomeLabMonitorCard extends HTMLElement {
   constructor() {
     super();
@@ -229,10 +229,7 @@ class HomeLabMonitorCard extends HTMLElement {
   }
 }
 
-// Register the custom element
 customElements.define("home-lab-monitor-card", HomeLabMonitorCard);
-
-// Register with HA Lovelace
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "custom:home-lab-monitor-card",
